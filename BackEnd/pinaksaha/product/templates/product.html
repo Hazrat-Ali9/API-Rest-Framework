@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Product Management</h1>
+
+    {% if current_category %}
+    <h2>Category: {{ current_category.category_name }}</h2>
+{% endif %}
+
+{% for item in items %}
+    <div>
+        <h3>{{ item.item_name }}</h3>
+        <p>{{ item.summary }}</p>
+        <p>Seen: {{ item.seen }}</p>
+        <p>Category: {{ item.category.category_name }}</p>
+        {% if item.images %}
+            <img src="{{ item.images.url }}" alt="{{ item.item_name }} Image" width="100">
+        {% endif %}
+        <p>Created Date: {{ item.created_date }}</p>
+    </div>
+{% endfor %}
+
+{% if form %}
+    <form method="post" enctype="multipart/form-data" action="{% url 'item' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Product</button>
+    </form>
+{% endif %}
+<script>
+    $(document).ready(function() {
+        // Update Button Click Event
+        $('.update-button').click(function() {
+            var itemId = $(this).data('id');
+            $('#itemId').val(itemId);
+            $('#updateModal').modal('show');
+        });
+    
+        $('#updateItemButton').click(function() {
+            var itemId = $('#itemId').val();
+            var newSummary = $('#newSummary').val();
+    
+            // Send AJAX request to update specific fields
+            $.ajax({
+                type: 'PUT',
+                url: '/api/items/' + itemId + '/', // Modify the URL according to your endpoint
+                data: {
+                    summary: newSummary
+                },
+                success: function(data) {
+                    // Handle success
+                    $('#updateModal').modal('hide');
+                    // Optionally, you can reload the page or update specific elements
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    // Handle error
+                    console.log(xhr.responseText);
+                }
+            });
+        });
+    
+        // Delete Button Click Event
+        $('.delete-button').click(function() {
+            var productId = $(this).data('id');
+    
+            if (confirm("Are you sure you want to delete this item?")) {
+                // Send AJAX request to delete product
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/api/products/' + productId + '/',
+                    success: function(data) {
+                        alert('Product deleted successfully');
+                        // You can handle the success response here
+                    },
+                    error: function(xhr, textStatus, errorThrown) {
+                        alert('Error deleting product');
+                        console.log(xhr.responseText);
+                    }
+                });
+            }
+        });
+    });
+    </script>
+{% endblock %}
